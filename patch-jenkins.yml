@@ -1,0 +1,15 @@
+apiVersion: spinnaker.armory.io/v1alpha2
+kind: SpinnakerService
+metadata:
+  name: spinnaker
+spec:
+  spinnakerConfig:
+    config:
+      ci:
+        jenkins:
+          enabled: true
+          masters:
+          - name: jenkins-sales
+            address: https://jenkins.sales.armory.io/
+            username: spin-away
+            password: encrypted:vault!e:secret!p:spinnaker/jenkins!k:password

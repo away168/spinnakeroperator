@@ -1,0 +1,25 @@
+apiVersion: spinnaker.armory.io/v1alpha2
+kind: SpinnakerService
+metadata:
+  name: spinnaker
+spec:
+  spinnakerConfig:
+    # this is to configure Spinnaker to use an Igor running in a custom location (e.g. from a debugger)
+    # profiles: 
+    #   spinnaker:
+    #     services:
+    #       igor:
+    #         baseUrl: http://192.168.64.1:8088
+    #         enabled: true
+    #         host: 0.0.0.0
+    #         port: 8088
+    service-settings:
+      igor:
+        kubernetes:
+          volumes:
+          - id: internal-trust-store
+            mountPath: /etc/ssl/certs/java
+            type: secret
+        # env:
+        #   JAVA_OPTS: "-Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacert"
+        
