@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spinnaker-operator
+  namespace: spinnaker-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: spinnaker-operator
+  template:
+    metadata:
+      labels:
+        name: spinnaker-operator
+    spec:
+      serviceAccountName: spinnaker-operator
+      containers:
+        - name: spinnaker-operator
+          image: armory/armory-operator:0.4.0
+          command:
+            - spinnaker-operator
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "spinnaker-operator"
+          volumeMounts:
+            - mountPath: /opt/spinnaker/config/halyard.yml
+              name: halconfig-volume
+              subPath: halyard-local.yml
+            - mountPath: /etc/ssl
+              name: internal-cert-pem
+        - name: halyard
+          image: armory/halyard-armory:operator-0.4.x
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8064
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8064
+            failureThreshold: 20
+            periodSeconds: 5
+            initialDelaySeconds: 20
+          livenessProbe:
+            tcpSocket:
+              port: 8064
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          volumeMounts:
+            - mountPath: /opt/spinnaker/config/halyard-local.yml
+              name: halconfig-volume
+              subPath: halyard-local.yml
+            - mountPath: /etc/ssl/certs/java
+              name: internal-trust-store
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: halyard-custom-config
+        name: halconfig-volume
+      - name: internal-trust-store
+        secret:
+          defaultMode: 420
+          secretName: internal-trust-store
+      - name: internal-cert-pem
+        secret:
+          defaultMode: 420
+          secretName: internal-cert-pem
